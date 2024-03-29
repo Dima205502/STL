@@ -160,7 +160,7 @@ template<typename T>
 MySTL::list<T>::~list(){
    Node* cur=reinterpret_cast<Node*>(FakeNode.next);
 
-   while(cur.next!=(&FakeNode)){
+   while(cur->next!=(&FakeNode)){
       Node* tmp=cur;
       cur=reinterpret_cast<Node*>(cur->next);
       delete tmp;
