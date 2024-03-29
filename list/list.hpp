@@ -37,5 +37,7 @@ namespace MySTL{
 
             bool empty() const;
             size_t size() const;
+
+            ~list();
     };
 };

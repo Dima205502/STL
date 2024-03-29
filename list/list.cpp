@@ -155,3 +155,16 @@ template<typename T>
 size_t MySTL::list<T>::size() const{
    return sz;
 }
+
+template<typename T>
+MySTL::list<T>::~list(){
+   Node* cur=reinterpret_cast<Node*>(FakeNode.next);
+
+   while(cur.next!=(&FakeNode)){
+      Node* tmp=cur;
+      cur=reinterpret_cast<Node*>(cur->next);
+      delete tmp;
+   }
+
+   delete cur;
+}
