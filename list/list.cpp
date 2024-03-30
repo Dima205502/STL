@@ -23,16 +23,16 @@ MySTL::list<T>::list(size_t n, const T& value) : list() {
     try {
         for (size_t i = 1; i < n; ++i) {
             cur->next = new Node(value,&FakeNode,cur);
-            cur = reinterpret_cast<Node*>(cur->next);
+            cur = static_cast<Node*>(cur->next);
 
         }
         FakeNode.prev = cur;
     }
     catch (...) {
-        Node* curr = reinterpret_cast<Node*>(FakeNode.next);
+        Node* curr = static_cast<Node*>(FakeNode.next);
         while (curr != cur) {
             Node* temp=curr;
-            curr = reinterpret_cast<Node*>(curr->next);
+            curr = static_cast<Node*>(curr->next);
             delete temp;
         }
 
@@ -47,11 +47,11 @@ MySTL::list<T>::list(size_t n, const T& value) : list() {
 template<typename T>
 MySTL::list<T>::list(const list<T>& other) :list() {
     if (other.empty()) return;
-    Node* other_cur = reinterpret_cast<Node*>(other.FakeNode.next);
+    Node* other_cur = static_cast<Node*>(other.FakeNode.next);
 
     Node* cur = new Node(other_cur->value, &FakeNode, &FakeNode);
 
-    other_cur = reinterpret_cast<Node*>(other_cur->next);
+    other_cur = static_cast<Node*>(other_cur->next);
 
     FakeNode.next = cur;
     FakeNode.prev = cur;
@@ -59,16 +59,16 @@ MySTL::list<T>::list(const list<T>& other) :list() {
     try {
         for (size_t i = 1; i < other.sz; ++i) {
             cur->next = new Node(other_cur->value,&FakeNode,cur);
-            cur = reinterpret_cast<Node*>(cur->next);
-            other_cur = reinterpret_cast<Node*>(other_cur->next);
+            cur = static_cast<Node*>(cur->next);
+            other_cur = static_cast<Node*>(other_cur->next);
         }
         FakeNode.prev = cur;
     }
     catch (...) {
-        Node* curr = reinterpret_cast<Node*>(FakeNode.next);
+        Node* curr = static_cast<Node*>(FakeNode.next);
         while (curr != cur) {
             Node* temp = curr;
-            curr = reinterpret_cast<Node*>(curr->next);
+            curr = static_cast<Node*>(curr->next);
             delete temp;
         }
 
@@ -104,7 +104,7 @@ void MySTL::list<T>::push_front(const T& value) {
 
 template<typename T>
 void MySTL::list<T>::pop_back() {
-    Node* tmp = reinterpret_cast<Node*>(FakeNode.prev);
+    Node* tmp = static_cast<Node*>(FakeNode.prev);
 
     tmp->prev->next = &FakeNode;
     FakeNode.prev = tmp->prev;
@@ -116,7 +116,7 @@ void MySTL::list<T>::pop_back() {
 
 template<typename T>
 void MySTL::list<T>::pop_front() {
-    Node* tmp = reinterpret_cast<Node*>(FakeNode.next);
+    Node* tmp = static_cast<Node*>(FakeNode.next);
 
     tmp->next->prev = &FakeNode;
     FakeNode.next = tmp->next;
@@ -128,22 +128,22 @@ void MySTL::list<T>::pop_front() {
 
 template<typename T>
 T& MySTL::list<T>::front() {
-    return reinterpret_cast<Node*>(FakeNode.next)->value;
+    return static_cast<Node*>(FakeNode.next)->value;
 }
 
 template<typename T>
 T& MySTL::list<T>::back() {
-    return reinterpret_cast<Node*>(FakeNode.prev)->value;
+    return static_cast<Node*>(FakeNode.prev)->value;
 }
 
 template<typename T>
 const T& MySTL::list<T>::front() const{
-    return reinterpret_cast<Node*>(FakeNode.next)->value;
+    return static_cast<Node*>(FakeNode.next)->value;
 }
 
 template<typename T>
 const T& MySTL::list<T>::back() const{
-    return reinterpret_cast<Node*>(FakeNode.prev)->value;
+    return static_cast<Node*>(FakeNode.prev)->value;
 }
 
 template<typename T>
@@ -158,11 +158,11 @@ size_t MySTL::list<T>::size() const{
 
 template<typename T>
 MySTL::list<T>::~list(){
-   Node* cur=reinterpret_cast<Node*>(FakeNode.next);
+   Node* cur=static_cast<Node*>(FakeNode.next);
 
    while(cur->next!=(&FakeNode)){
       Node* tmp=cur;
-      cur=reinterpret_cast<Node*>(cur->next);
+      cur=static_cast<Node*>(cur->next);
       delete tmp;
    }
 
