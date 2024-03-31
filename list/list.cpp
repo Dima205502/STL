@@ -1,5 +1,8 @@
 #include"list.hpp"
 
+
+
+
 template<typename T>
 MySTL::list<T>::BaseNode::BaseNode(BaseNode* next, BaseNode* prev) :next(next), prev(prev)
 {}
@@ -8,9 +11,14 @@ template<typename T>
 MySTL::list<T>::Node::Node(const T& value, BaseNode* next, BaseNode* prev) : BaseNode(next,prev),value(value)
 {}
 
+
+
+//               Member functions
+
 template<typename T>
 MySTL::list<T>::list() : FakeNode{ &FakeNode,&FakeNode }, sz(0)
 {}
+
 
 template<typename T>
 MySTL::list<T>::list(size_t n, const T& value) : list() {
@@ -81,6 +89,36 @@ MySTL::list<T>::list(const list<T>& other) :list() {
     sz = other.sz;
 }
 
+template<typename T>
+MySTL::list<T>::~list(){
+   Node* cur=static_cast<Node*>(FakeNode.next);
+
+   while(cur->next!=(&FakeNode)){
+      Node* tmp=cur;
+      cur=static_cast<Node*>(cur->next);
+      delete tmp;
+   }
+
+   delete cur;
+}
+
+
+
+//              Capacity
+
+template<typename T>
+bool MySTL::list<T>::empty() const{
+   return (FakeNode.next==(&FakeNode) && FakeNode.prev==(&FakeNode));
+}
+
+template<typename T>
+size_t MySTL::list<T>::size() const{
+   return sz;
+}
+
+
+
+//             Modifieres
 
 template<typename T>
 void MySTL::list<T>::push_back(const T& value) {
@@ -126,6 +164,10 @@ void MySTL::list<T>::pop_front() {
     sz--;
 }
 
+
+
+//          Element access
+
 template<typename T>
 T& MySTL::list<T>::front() {
     return static_cast<Node*>(FakeNode.next)->value;
@@ -146,25 +188,66 @@ const T& MySTL::list<T>::back() const{
     return static_cast<Node*>(FakeNode.prev)->value;
 }
 
+
+//         Iterators
+
 template<typename T>
-bool MySTL::list<T>::empty() const{
-   return (FakeNode.next==(&FakeNode) && FakeNode.prev==(&FakeNode));
+typename MySTL::list<T>::iterator MySTL::list<T>::begin() {
+    return iterator(static_cast<Node*>(FakeNode.next));
 }
 
 template<typename T>
-size_t MySTL::list<T>::size() const{
-   return sz;
+typename MySTL::list<T>::iterator MySTL::list<T>::end() {
+    return iterator(&Node(-1,FakeNode.next,FakeNode.prev));
+}
+
+
+template<typename T>
+typename MySTL::list<T>::const_iterator MySTL::list<T>::begin() const {
+    return const_iterator(static_cast<Node*>(FakeNode.next));
 }
 
 template<typename T>
-MySTL::list<T>::~list(){
-   Node* cur=static_cast<Node*>(FakeNode.next);
+typename MySTL::list<T>::const_iterator MySTL::list<T>::end() const {
+    return const_iterator(&Node(-1,FakeNode.next,FakeNode.prev));
+}
 
-   while(cur->next!=(&FakeNode)){
-      Node* tmp=cur;
-      cur=static_cast<Node*>(cur->next);
-      delete tmp;
-   }
+template<typename T>
+typename MySTL::list<T>::const_iterator MySTL::list<T>::cbegin() const {
+    return const_iterator(static_cast<Node*>(FakeNode.next));
+}
 
-   delete cur;
+template<typename T>
+typename::MySTL::list<T>::const_iterator MySTL::list<T>::cend() const {
+    return const_iterator(&Node(-1,FakeNode.next,FakeNode.prev));
+}
+
+template<typename T>
+typename::MySTL::list<T>::reverse_iterator MySTL::list<T>::rbegin() {
+    return reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::list<T>::reverse_iterator MySTL::list<T>::rend() {
+    return reverse_iterator(begin());
+}
+
+template<typename T>
+typename MySTL::list<T>::const_reverse_iterator MySTL::list<T>::rbegin() const {
+    return const_reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::list<T>::const_reverse_iterator MySTL::list<T>::rend() const {
+    return const_reverse_iterator(begin());
+}
+
+template<typename T>
+typename MySTL::list<T>::const_reverse_iterator MySTL::list<T>::crbegin() const {
+    return const_reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::list<T>::const_reverse_iterator MySTL::list<T>::crend() const {
+    return const_reverse_iterator(begin());
 }
