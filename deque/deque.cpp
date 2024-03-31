@@ -1,5 +1,8 @@
 #include"deque.hpp"
 
+
+//           Member functions
+
 template<typename T>
 MySTL::deque<T>::deque() = default;
 
@@ -94,14 +97,45 @@ MySTL::deque<T>::deque(const MySTL::deque<T>& other) {
 }
 
 template<typename T>
-size_t MySTL::deque<T>::size() const {
-    return sz;
+MySTL::deque<T>::~deque() {
+    size_t cur_row = row_front, cur_col = col_front;
+
+    while (cur_row != row_back || cur_col != col_back) {
+        ptr_arr[cur_row][cur_col].~T();
+        cur_col++;
+        if (cur_col == SZ_COL) {
+            cur_row++;
+            cur_col = 0;
+        }
+    }
+
+    for (size_t i = 0; i < count_rows; ++i) {
+        delete[] reinterpret_cast<uint8_t*>(ptr_arr[i]);
+    }
+
+    delete[] ptr_arr;
 }
+
+
+
+
+//                Capacity
+
+
 
 template<typename T>
 bool MySTL::deque<T>::empty() const {
     return sz == 0;
 }
+
+template<typename T>
+size_t MySTL::deque<T>::size() const {
+    return sz;
+}
+
+
+
+//             Modifieres
 
 template<typename T>
 void MySTL::deque<T>::push_back(const T& value) {
@@ -226,6 +260,38 @@ void MySTL::deque<T>::push_front(const T& value) {
 }
 
 template<typename T>
+void MySTL::deque<T>::pop_back(){
+    if(row_front==row_back && col_front==col_back) return;
+
+    col_back--;
+    if(col_back==-1){
+        row_back--;
+        col_back=SZ_COL-1;
+    }
+
+    ptr_arr[row_back][col_back].~T();
+}
+
+template<typename T>
+void MySTL::deque<T>::pop_front(){
+    if(row_front==row_back && col_front==col_back) return;
+
+    ptr_arr[row_front][col_front].~T();
+
+    col_front++;
+    if(col_front==SZ_COL){
+        row_front++;
+        col_front=0;
+    }
+}
+
+
+
+
+
+//             Element access
+
+template<typename T>
 T& MySTL::deque<T>::front() {
     return ptr_arr[row_front][col_front];
 }
@@ -279,48 +345,69 @@ const T& MySTL::deque<T>::at(size_t i) const {
     throw std::out_of_range("incorrect call method .at");
 }
 
+
+
+
+
+//          Iterators
+
 template<typename T>
-void MySTL::deque<T>::pop_back(){
-    if(row_front==row_back && col_front==col_back) return;
-
-    col_back--;
-    if(col_back==-1){
-        row_back--;
-        col_back=SZ_COL-1;
-    }
-
-    ptr_arr[row_back][col_back].~T();
+typename MySTL::deque<T>::iterator   MySTL::deque<T>::begin(){
+    return iterator(ptr_arr,row_front,col_front);
 }
 
 template<typename T>
-void MySTL::deque<T>::pop_front(){
-    if(row_front==row_back && col_front==col_back) return;
+typename MySTL::deque<T>::iterator   MySTL::deque<T>::end(){
+    return iterator(ptr_arr,row_back,col_back);
+}
 
-    ptr_arr[row_front][col_front].~T();
 
-    col_front++;
-    if(col_front==SZ_COL){
-        row_front++;
-        col_front=0;
-    }
+template<typename T>
+typename MySTL::deque<T>::const_iterator    MySTL::deque<T>::begin() const{
+    return const_iterator(ptr_arr,row_front,col_front);
 }
 
 template<typename T>
-MySTL::deque<T>::~deque() {
-    size_t cur_row = row_front, cur_col = col_front;
+typename MySTL::deque<T>::const_iterator   MySTL::deque<T>::end() const{
+    return const_iterator(ptr_arr,row_back,col_back);
+}
 
-    while (cur_row != row_back || cur_col != col_back) {
-        ptr_arr[cur_row][cur_col].~T();
-        cur_col++;
-        if (cur_col == SZ_COL) {
-            cur_row++;
-            cur_col = 0;
-        }
-    }
+template<typename T>
+typename MySTL::deque<T>::const_iterator   MySTL::deque<T>::cbegin() const{
+    return const_iterator(ptr_arr,row_front,col_front);
+}
 
-    for (size_t i = 0; i < count_rows; ++i) {
-        delete[] reinterpret_cast<uint8_t*>(ptr_arr[i]);
-    }
+template<typename T>
+typename::MySTL::deque<T>::const_iterator  MySTL::deque<T>::cend() const{
+    return const_iterator(ptr_arr,row_back,col_back);
+}
 
-    delete[] ptr_arr;
+template<typename T>
+typename::MySTL::deque<T>::reverse_iterator  MySTL::deque<T>::rbegin(){
+    return reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::deque<T>::reverse_iterator   MySTL::deque<T>::rend(){
+    return reverse_iterator(begin());
+}
+
+template<typename T>
+typename MySTL::deque<T>::const_reverse_iterator   MySTL::deque<T>::rbegin() const{
+    return const_reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::deque<T>::const_reverse_iterator    MySTL::deque<T>::rend() const{
+    return const_reverse_iterator(begin());
+}
+
+template<typename T>
+typename MySTL::deque<T>::const_reverse_iterator    MySTL::deque<T>::crbegin() const{
+    return const_reverse_iterator(end());
+}
+
+template<typename T>
+typename MySTL::deque<T>::const_reverse_iterator    MySTL::deque<T>::crend() const{
+    return const_reverse_iterator(begin());
 }
