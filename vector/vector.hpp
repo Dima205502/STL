@@ -3,150 +3,155 @@
 #include<iterator>
 #include<stdexcept>
 #include<type_traits>
+#include<stddef.h>
 
 namespace MySTL{
 
-  template<typename T>
-  class vector{
+  template<typename T,typename Alloc = std::allocator<T>>
+class vector {
 
-    private:
-       T* arr=nullptr;
-       size_t sz=0;
-       size_t cp=0;
-       
-       template<bool isConst>
-       struct base_iterator{
-           public:
-              using value_type = T;
-              using pointer = conditional_t<isConst,const T*,T*>;
-              using reference = conditional_t<isConst,const T&,T&>;
-              using iterator_category = std::contiguous_iterator_tag;
+private:
+    Alloc alloc;
 
-           private:
-              pointer ptr;
+    T* arr = nullptr;
+    size_t sz = 0;
+    size_t cp = 0;
 
-          public:
-              base_iterator(pointer ptr): ptr(ptr) {}
-              base_iterator(const base_iterator&)=default;
-              base_iterator& operator=(const base_iterator&)=default;
+    template<bool isConst>
+    struct base_iterator {
+       public:
+        using value_type = T;
+        using pointer = conditional_t<isConst, const T*, T*>;
+        using reference = conditional_t<isConst, const T&, T&>;
+        using iterator_category = std::random_access_iterator_tag;
 
-              reference operator*() const{
-                 return *ptr;
-              }
+      private:
+        pointer ptr;
 
-              pointer operator->() const{
-                 return ptr;
-              }
+      public:
+        base_iterator(pointer ptr) : ptr(ptr) {}
+        base_iterator(const base_iterator&) = default;
+        base_iterator& operator=(const base_iterator&) = default;
 
-              base_iterator& operator++(){
-                ++ptr;
-                return *this;
-              }
+        reference operator*() const {
+            return *ptr;
+        }
 
-              base_iterator& operator++(int){
-                base_iterator tmp=*this;
-                ++ptr;
-                return tmp;
-              }
+        pointer operator->() const {
+            return ptr;
+        }
 
-              base_iterator& operator--(){
-                --ptr;
-                return *this;
-              }
+        base_iterator& operator++() {
+            ++ptr;
+            return *this;
+        }
 
-              base_iterator& operator--(int){
-                base_iterator tmp=*this;
-                --ptr;
-                return tmp;
-              }
+        base_iterator& operator++(int) {
+            base_iterator tmp = *this;
+            ++ptr;
+            return tmp;
+        }
 
-              base_iterator& operator+=(int n){
-                ptr+=n;
-                return *this;
-              }
+        base_iterator& operator--() {
+            --ptr;
+            return *this;
+        }
 
-              base_iterator& operator-=(int n){
-                ptr-=n;
-                return *this;
-              } 
-       };
+        base_iterator& operator--(int) {
+            base_iterator tmp = *this;
+            --ptr;
+            return tmp;
+        }
 
-    public:
-       
-       using value_type = T;
-       using reference = T&;
-       using const_referense = const T&;
+        base_iterator& operator+=(int n) {
+            ptr += n;
+            return *this;
+        }
 
-       using iterator = base_iterator<false>;
-       using const_iterator = base_iterator<true>;
-       using reverse_iterator = std::reverse_iterator<iterator>;
-       using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-      
+        base_iterator& operator-=(int n) {
+            ptr -= n;
+            return *this;
+        }
 
-       //    Member functions
+        bool operator==(const base_iterator& other) {
+            return ptr == other.ptr;
+        }
+    };
 
-       vector();
-       vector(size_t,const T&);
-       vector(const MySTL::vector<T>&);
+public:
 
-       ~vector();
-      
+    using value_type = T;
+    using reference = T&;
+    using const_referense = const T&;
+
+    using iterator = base_iterator<false>;
+    using const_iterator = base_iterator<true>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 
-       //     Capacity 
+    //    Member functions
 
-       bool empty() const;
-       size_t size() const;
-       size_t capacity() const;
-       
-       void reserve(size_t);
+    vector();
+    vector(size_t, const T&);
+    vector(const MySTL::vector<T>&);
 
-
-       //     Modifieres
-
-       void push_back(const T& value);
-       void pop_back();
-
-       void resize(size_t,const T&);
-       
-
-       //    Element access
-
-       T& operator[](size_t);
-       const T& operator[](size_t) const;
-
-       T& at(size_t);
-       const T& at(size_t) const;
-
-       T& back();
-       T& front();
-
-       const T& back() const;
-       const T& front() const;
+    ~vector();
 
 
-       //       Iterators
 
-       iterator begin();
-       iterator end();
+    //     Capacity 
 
-       const_iterator begin() const;
-       const_iterator end() const;
+    bool empty() const;
+    size_t size() const;
+    size_t capacity() const;
 
-       const_iterator cbegin() const;
-       const_iterator cend() const;
-
-       reverse_iterator rbegin();
-       reverse_iterator rend();
-
-       const_reverse_iterator rbegin() const;
-       const_reverse_iterator rend() const;
-
-       const_reverse_iterator crbegin() const;
-       const_reverse_iterator crend() const;
-  };
+    void reserve(size_t);
 
 
+    //     Modifieres
+
+    void push_back(const T& value);
+    void pop_back();
+
+    void resize(size_t, const T&);
+
+
+    //    Element access
+
+    T& operator[](size_t);
+    const T& operator[](size_t) const;
+
+    T& at(size_t);
+    const T& at(size_t) const;
+
+    T& back();
+    T& front();
+
+    const T& back() const;
+    const T& front() const;
+
+
+    //       Iterators
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
+
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+
+    reverse_iterator rbegin();
+    reverse_iterator rend();
+
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
+
+    const_reverse_iterator crbegin() const;
+    const_reverse_iterator crend() const;
+};
 
 
 
@@ -216,8 +221,8 @@ namespace MySTL{
               }
 
               base_iterator& operator+=(int n){
-                bit_ptr.ptr+=(1+bit_ptr.pos+n)/8;
-                bit_ptr.pos=(bit_ptr.pos+n)%8;
+                bit_ptr.ptr+=(bit_ptr.pos+n)/8;
+                bit_ptr.pos=(1'000'000*8+bit_ptr.pos+n)%8;
                 return *this;
               }
 
@@ -226,6 +231,10 @@ namespace MySTL{
                 bit_ptr.pos=(1'000'000*8-((bit_ptr.pos-n)))%8;
                 return *this;
               } 
+
+              bool operator==(const base_iterator& other){
+                return bit_ptr.ptr == other.bit_ptr.ptr && bit_ptr.pos == other.bit_ptr.pos;
+              }
        };
 
     public:

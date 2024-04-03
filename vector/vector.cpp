@@ -3,60 +3,60 @@
 ////////////////////////////     VECTOR<T>     /////////////////////////////
 
 
-
-
-
 //           Member functions
 
-template<typename T>
-MySTL::vector<T>::vector()=default;
+template<typename T,typename Alloc>
+MySTL::vector<T,Alloc>::vector() = default;
 
-template<typename T>
-MySTL::vector<T>::vector(size_t n,const T& value){
+template<typename T, typename Alloc>
+MySTL::vector<T,Alloc>::vector(size_t n, const T& value) {
 
-    arr=reinterpret_cast<T*>(new uint8_t[2*(n+1)*sizeof(T)]);
-    
-    sz=n;
-    cp=2*(sz+1);
+    arr = alloc.allocate(2*(n+1));
 
-    size_t i=0;
-    try{
-        for(;i<sz;++i){
-            new(arr+i) T(value);
+    sz = n;
+    cp = 2 * (sz + 1);
+
+    size_t i = 0;
+    try {
+        for (; i < sz; ++i) {
+            alloc.construct(arr + i, value);
         }
-    } catch(...){
+    }
+    catch (...) {
 
-        for(size_t j=0;j<i;++j){
-            (arr+j)->~T();
+        for (size_t j = 0; j < i; ++j) {
+            alloc.destroy(arr + j);
         }
-        delete[] reinterpret_cast<uint8_t*>(arr);
-        arr=nullptr;
-        sz=cp=0;
+        
+        alloc.deallocate(arr,cp);
+
+        arr = nullptr;
+        sz = cp = 0;
 
         throw;
     }
 }
 
 
-template<typename T>
-MySTL::vector<T>::vector(const MySTL::vector<T>& other){
-    sz=other.sz;
-    cp=other.cp;
+template<typename T, typename Alloc>
+MySTL::vector<T,Alloc>::vector(const MySTL::vector<T>& other) {
+    sz = other.sz;
+    cp = other.cp;
 
-    arr=reinterpret_cast<T*>(new int8_t(cp*sizeof(T)));
+    arr = alloc.allocate(cp);
 
-    for(size_t i=0;i<sz;++i){
-        new (arr+i) T(other.arr[i]);
+    for (size_t i = 0; i < sz; ++i) {
+        alloc.construct(arr + i, other.arr[i]);
     }
 }
 
-template<typename T>
-MySTL::vector<T>::~vector(){
-    for(size_t i=0;i<sz;++i){
-        (arr+i)->~T();
+template<typename T, typename Alloc>
+MySTL::vector<T,Alloc>::~vector() {
+    for (size_t i = 0; i < sz; ++i) {
+        alloc.destroy(arr + i);
     }
 
-    if(arr!=nullptr) delete[] reinterpret_cast<uint8_t*>(arr);
+    if (arr != nullptr) alloc.deallocate(arr,cp);
 }
 
 
@@ -65,96 +65,104 @@ MySTL::vector<T>::~vector(){
 
 //          Capacity
 
-template<typename T>
-void MySTL::vector<T>::reserve(size_t n){
-    if(n<=cp) return;
+template<typename T, typename Alloc>
+void MySTL::vector<T,Alloc>::reserve(size_t new_cap) {
+    if (new_cap <= cp) return;
 
-    T* new_arr=reinterpret_cast<T*>(new int8_t[n*sizeof(T)]);
-            
-    try{
-        std::uninitialized_copy(arr,arr+sz,new_arr);
-    } catch(...){
-        delete[] reinterpret_cast<int8_t*>(new_arr);
+    T* new_arr = alloc.allocate(new_cap);
+
+    size_t i = 0;
+    try {
+        for (; i < sz; ++i) {
+            alloc.construct(new_arr + i, arr[i]);
+        }
+    }
+    catch (...) {
+        for (size_t j = 0; j < i; ++j) {
+            alloc.destroy(new_arr + i);
+        }
         throw;
     }
 
-    for(size_t i=0;i<sz;++i){
-        (arr+i)->~T();
+    for (size_t i = 0; i < sz; ++i) {
+        alloc.destroy(arr + i);
     }
 
-    if(arr!=nullptr) delete[] reinterpret_cast<int8_t*>(arr);
+    if (arr != nullptr) alloc.deallocate(arr, cp);
 
-    arr=new_arr;
-    cp=n;
+    arr = new_arr;
+    cp = new_cap;
 };
 
-template<typename T>
-size_t MySTL::vector<T>::capacity() const{
+template<typename T, typename Alloc>
+size_t MySTL::vector<T,Alloc>::capacity() const {
     return cp;
 }
 
 
-template<typename T>
-size_t MySTL::vector<T>::size() const{
+template<typename T, typename Alloc>
+size_t MySTL::vector<T,Alloc>::size() const {
     return sz;
 }
 
-template<typename T>
-bool MySTL::vector<T>::empty() const{
-    return sz==0;
+template<typename T, typename Alloc>
+bool MySTL::vector<T,Alloc>::empty() const {
+    return sz == 0;
 }
 
 
 //          Modifiers
 
-template<typename T>
-void MySTL::vector<T>::resize(size_t n,const T& value){
-    if(n<sz){
-        for(size_t i=n;i<sz;++i){
-            (arr+i)->~T();
+template<typename T, typename Alloc>
+void MySTL::vector<T,Alloc>::resize(size_t n, const T& value) {
+    if (n < sz) {
+        for (size_t i = n; i < sz; ++i) {
+            alloc.destroy(arr+i);
         }
 
-        sz=n;
+        sz = n;
         return;
-    } 
-
-    if(n>sz) reserve(2*(n+1));
-    
-    size_t i=sz;
-    try{
-       for(;i<n;++i){
-          new (arr+i) T(value);
-       } 
-    } catch(...){
-       for(size_t j=sz;j<i;++j){
-          (arr+j)->T();
-       }
-    
-       throw;
     }
 
-    sz=n;
+    if (n > sz) reserve(2 * (n + 1));
+
+    size_t i = sz;
+    try {
+        for (; i < n; ++i) {
+           alloc.construct(arr+i,value);
+        }
+    }
+    catch (...) {
+        for (size_t j = sz; j < i; ++j) {
+            alloc.destroy(arr + j);
+        }
+
+        throw;
+    }
+
+    sz = n;
 }
 
-template<typename T>
-void MySTL::vector<T>::push_back(const T& value){
-    if(sz==cp) reserve(2*(sz+1));
+template<typename T, typename Alloc>
+void MySTL::vector<T,Alloc>::push_back(const T& value) {
+    if (sz == cp) reserve(2 * (sz + 1));
 
-    try{
-       new (arr+sz) T(value);
-    } catch(...){
-       (arr+sz)->~T();
-       throw;
+    try {
+        alloc.construct(arr + sz, value);
+    }
+    catch (...) {
+        alloc.destroy(arr + sz);
+        throw;
     }
 
     sz++;
 }
 
-template<typename T>
-void MySTL::vector<T>::pop_back(){
-    if(sz==0) return;
+template<typename T, typename Alloc>
+void MySTL::vector<T,Alloc>::pop_back() {
+    if (sz == 0) return;
     sz--;
-    (arr+sz)->~T();
+    alloc.destroy(arr + sz);
 }
 
 
@@ -164,48 +172,48 @@ void MySTL::vector<T>::pop_back(){
 
 //           Element access
 
-template<typename T>
-T& MySTL::vector<T>::operator[](size_t i){
-    return arr[i];   
-}
-
-template<typename T>
-const T& MySTL::vector<T>::operator[](size_t i) const{
+template<typename T, typename Alloc>
+T& MySTL::vector<T,Alloc>::operator[](size_t i) {
     return arr[i];
 }
 
-template<typename T>
-T& MySTL::vector<T>::at(size_t i){
-    if(i<sz) return arr[i];
+template<typename T, typename Alloc>
+const T& MySTL::vector<T,Alloc>::operator[](size_t i) const {
+    return arr[i];
+}
+
+template<typename T, typename Alloc>
+T& MySTL::vector<T,Alloc>::at(size_t i) {
+    if (i < sz) return arr[i];
 
     throw std::out_of_range("incorrect call method .at");
 }
 
-template<typename T>
-const T& MySTL::vector<T>::at(size_t i) const{
-    if(i<sz) return arr[i];
+template<typename T, typename Alloc>
+const T& MySTL::vector<T,Alloc>::at(size_t i) const {
+    if (i < sz) return arr[i];
 
     throw std::out_of_range("incorrect call method .at");
 }
 
-template<typename T>
-T& MySTL::vector<T>::front(){
+template<typename T, typename Alloc>
+T& MySTL::vector<T,Alloc>::front() {
     return arr[0];
 }
 
-template<typename T>
-T& MySTL::vector<T>::back(){
-    return arr[sz-1];
+template<typename T, typename Alloc>
+T& MySTL::vector<T,Alloc>::back() {
+    return arr[sz - 1];
 }
 
-template<typename T>
-const T& MySTL::vector<T>::front() const{
+template<typename T, typename Alloc>
+const T& MySTL::vector<T,Alloc>::front() const {
     return arr[0];
 }
 
-template<typename T>
-const T& MySTL::vector<T>::back() const{
-    return arr[sz-1];
+template<typename T, typename Alloc>
+const T& MySTL::vector<T,Alloc>::back() const {
+    return arr[sz - 1];
 }
 
 
@@ -213,68 +221,66 @@ const T& MySTL::vector<T>::back() const{
 
 //        Iterators
 
-template<typename T>
-typename MySTL::vector<T>::iterator MySTL::vector<T>::begin(){
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::iterator MySTL::vector<T,Alloc>::begin() {
     return arr;
 }
 
-template<typename T>
-typename MySTL::vector<T>::iterator MySTL::vector<T>::end(){
-    return arr+sz;
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::iterator MySTL::vector<T,Alloc>::end() {
+    return arr + sz;
 }
 
 
-template<typename T>
-typename MySTL::vector<T>::const_iterator MySTL::vector<T>::begin() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_iterator MySTL::vector<T,Alloc>::begin() const {
     return arr;
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_iterator MySTL::vector<T>::end() const{
-    return arr+sz;
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_iterator MySTL::vector<T,Alloc>::end() const {
+    return arr + sz;
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_iterator MySTL::vector<T>::cbegin() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_iterator MySTL::vector<T,Alloc>::cbegin() const {
     return arr;
 }
 
-template<typename T>
-typename::MySTL::vector<T>::const_iterator MySTL::vector<T>::cend() const{
-    return arr+sz;
+template<typename T, typename Alloc>
+typename::MySTL::vector<T,Alloc>::const_iterator MySTL::vector<T,Alloc>::cend() const {
+    return arr + sz;
 }
 
-template<typename T>
-typename::MySTL::vector<T>::reverse_iterator MySTL::vector<T>::rbegin(){
+template<typename T, typename Alloc>
+typename::MySTL::vector<T,Alloc>::reverse_iterator MySTL::vector<T,Alloc>::rbegin() {
     return reverse_iterator(end());
 }
 
-template<typename T>
-typename MySTL::vector<T>::reverse_iterator MySTL::vector<T>::rend(){
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::reverse_iterator MySTL::vector<T,Alloc>::rend() {
     return reverse_iterator(begin());
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_reverse_iterator MySTL::vector<T>::rbegin() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_reverse_iterator MySTL::vector<T,Alloc>::rbegin() const {
     return const_reverse_iterator(end());
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_reverse_iterator MySTL::vector<T>::rend() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_reverse_iterator MySTL::vector<T,Alloc>::rend() const {
     return const_reverse_iterator(begin());
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_reverse_iterator MySTL::vector<T>::crbegin() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_reverse_iterator MySTL::vector<T,Alloc>::crbegin() const {
     return const_reverse_iterator(end());
 }
 
-template<typename T>
-typename MySTL::vector<T>::const_reverse_iterator MySTL::vector<T>::crend() const{
+template<typename T, typename Alloc>
+typename MySTL::vector<T,Alloc>::const_reverse_iterator MySTL::vector<T,Alloc>::crend() const {
     return const_reverse_iterator(begin());
 }
-
-
 
 
 

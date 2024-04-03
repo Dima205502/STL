@@ -386,12 +386,6 @@ MySTL::unordered_map<Key,Value,Hash,KeyEqual>::end() const{
    return const_iterator(&FakeNode);
 }
 
-
-
-//                 Bucket interface
-
-
-
 template<typename Key,typename Value,typename Hash,typename KeyEqual>
 size_t MySTL::unordered_map<Key,Value,Hash,KeyEqual>::bucket_count() const{
    return bucket_cnt;
