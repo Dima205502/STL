@@ -8,14 +8,16 @@
 namespace MySTL{
 
   template<typename T,typename Alloc = std::allocator<T>>
-class vector {
+  class vector {
 
-private:
+  private:
     Alloc alloc;
 
     T* arr = nullptr;
     size_t sz = 0;
     size_t cp = 0;
+
+    using AllocTraits = std::allocator_traits<Alloc>;
 
     template<bool isConst>
     struct base_iterator {

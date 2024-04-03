@@ -1,9 +1,12 @@
 #include"vector.hpp"
 
+
+
 ////////////////////////////     VECTOR<T>     /////////////////////////////
 
 
 //           Member functions
+
 
 template<typename T,typename Alloc>
 MySTL::vector<T,Alloc>::vector() = default;
@@ -11,7 +14,7 @@ MySTL::vector<T,Alloc>::vector() = default;
 template<typename T, typename Alloc>
 MySTL::vector<T,Alloc>::vector(size_t n, const T& value) {
 
-    arr = alloc.allocate(2*(n+1));
+    arr = AllocTraits::allocate(alloc,2*(n+1));
 
     sz = n;
     cp = 2 * (sz + 1);
@@ -19,16 +22,16 @@ MySTL::vector<T,Alloc>::vector(size_t n, const T& value) {
     size_t i = 0;
     try {
         for (; i < sz; ++i) {
-            alloc.construct(arr + i, value);
+            AllocTraits::construct(alloc,arr + i, value);
         }
     }
     catch (...) {
 
         for (size_t j = 0; j < i; ++j) {
-            alloc.destroy(arr + j);
+            AllocTraits::destroy(alloc,arr + j);
         }
         
-        alloc.deallocate(arr,cp);
+        AllocTraits::deallocate(alloc,arr,cp);
 
         arr = nullptr;
         sz = cp = 0;
@@ -43,20 +46,20 @@ MySTL::vector<T,Alloc>::vector(const MySTL::vector<T>& other) {
     sz = other.sz;
     cp = other.cp;
 
-    arr = alloc.allocate(cp);
+    arr = AllocTraits::allocate(alloc,cp);
 
     for (size_t i = 0; i < sz; ++i) {
-        alloc.construct(arr + i, other.arr[i]);
+        AllocTraits::construct(alloc,arr + i, other.arr[i]);
     }
 }
 
 template<typename T, typename Alloc>
 MySTL::vector<T,Alloc>::~vector() {
     for (size_t i = 0; i < sz; ++i) {
-        alloc.destroy(arr + i);
+        AllocTraits::destroy(alloc,arr + i);
     }
 
-    if (arr != nullptr) alloc.deallocate(arr,cp);
+    if (arr != nullptr) AllocTraits::deallocate(alloc,arr,cp);
 }
 
 
@@ -69,26 +72,26 @@ template<typename T, typename Alloc>
 void MySTL::vector<T,Alloc>::reserve(size_t new_cap) {
     if (new_cap <= cp) return;
 
-    T* new_arr = alloc.allocate(new_cap);
+    T* new_arr = AllocTraits::allocate(alloc,new_cap);
 
     size_t i = 0;
     try {
         for (; i < sz; ++i) {
-            alloc.construct(new_arr + i, arr[i]);
+            AllocTraits::construct(alloc,new_arr + i, arr[i]);
         }
     }
     catch (...) {
         for (size_t j = 0; j < i; ++j) {
-            alloc.destroy(new_arr + i);
+            AllocTraits::destroy(alloc,new_arr + i);
         }
         throw;
     }
 
     for (size_t i = 0; i < sz; ++i) {
-        alloc.destroy(arr + i);
+        AllocTraits::destroy(alloc,arr + i);
     }
 
-    if (arr != nullptr) alloc.deallocate(arr, cp);
+    if (arr != nullptr) AllocTraits::deallocate(alloc,arr, cp);
 
     arr = new_arr;
     cp = new_cap;
@@ -117,7 +120,7 @@ template<typename T, typename Alloc>
 void MySTL::vector<T,Alloc>::resize(size_t n, const T& value) {
     if (n < sz) {
         for (size_t i = n; i < sz; ++i) {
-            alloc.destroy(arr+i);
+            AllocTraits::destroy(alloc,arr+i);
         }
 
         sz = n;
@@ -129,12 +132,12 @@ void MySTL::vector<T,Alloc>::resize(size_t n, const T& value) {
     size_t i = sz;
     try {
         for (; i < n; ++i) {
-           alloc.construct(arr+i,value);
+           AllocTraits::construct(alloc,arr+i,value);
         }
     }
     catch (...) {
         for (size_t j = sz; j < i; ++j) {
-            alloc.destroy(arr + j);
+            AllocTraits::destroy(alloc,arr + j);
         }
 
         throw;
@@ -148,10 +151,10 @@ void MySTL::vector<T,Alloc>::push_back(const T& value) {
     if (sz == cp) reserve(2 * (sz + 1));
 
     try {
-        alloc.construct(arr + sz, value);
+        AllocTraits::construct(alloc,arr + sz, value);
     }
     catch (...) {
-        alloc.destroy(arr + sz);
+        AllocTraits::destroy(alloc,arr + sz);
         throw;
     }
 
@@ -162,7 +165,7 @@ template<typename T, typename Alloc>
 void MySTL::vector<T,Alloc>::pop_back() {
     if (sz == 0) return;
     sz--;
-    alloc.destroy(arr + sz);
+    AllocTraits::destroy(alloc,arr + sz);
 }
 
 
