@@ -2,11 +2,11 @@
 
 
 
+
 ////////////////////////////     VECTOR<T>     /////////////////////////////
 
 
 //           Member functions
-
 
 template<typename T,typename Alloc>
 MySTL::vector<T,Alloc>::vector() = default;
@@ -40,9 +40,53 @@ MySTL::vector<T,Alloc>::vector(size_t n, const T& value) {
     }
 }
 
+template<typename T,typename Alloc>
+MySTL::vector<T, Alloc>::vector(vector&& other): arr(other.arr),sz(other.sz),cp(other.cp),alloc(std::move(other.alloc)){
+    other.arr = nullptr;
+    other.sz = 0;
+    other.cp = 0;
+}
+
+template<typename T,typename Alloc>
+MySTL::vector<T, Alloc>&    MySTL::vector<T, Alloc>::operator=(const vector<T, Alloc>& other) {
+    for (size_t i = 0; i < sz; ++i) {
+        AllocTraits::destroy(alloc, arr + i);
+    }
+
+    AllocTraits::deallocate(alloc,arr,cp);
+
+    sz = other.sz;
+    cp = other.cp;
+
+    arr = AllocTraits::allocate(alloc,cp);
+
+    for (size_t i = 0; i < sz; ++i) {
+        AllocTraits::construct(alloc, arr + i, other.arr[i]);
+    }
+}
+
+
+template<typename T,typename Alloc>
+MySTL::vector<T, Alloc>& MySTL::vector<T, Alloc>::operator=(vector&& other) {
+    for (size_t i = 0; i < sz; ++i) {
+        AllocTraits::destroy(alloc, arr + i);
+    }
+
+    AllocTraits::deallocate(alloc, arr,cp);
+
+    arr = other.arr;
+    sz = other.sz;
+    cp = other.cp;
+    alloc = std::move(other.alloc);
+
+    other.arr = nullptr;
+    other.sz = 0;
+    other.cp = 0;
+}
+
 
 template<typename T, typename Alloc>
-MySTL::vector<T,Alloc>::vector(const MySTL::vector<T>& other) {
+MySTL::vector<T,Alloc>::vector(const MySTL::vector<T,Alloc>& other) {
     sz = other.sz;
     cp = other.cp;
 
@@ -77,7 +121,7 @@ void MySTL::vector<T,Alloc>::reserve(size_t new_cap) {
     size_t i = 0;
     try {
         for (; i < sz; ++i) {
-            AllocTraits::construct(alloc,new_arr + i, arr[i]);
+            AllocTraits::construct(alloc,new_arr + i, std::move(arr[i]));
         }
     }
     catch (...) {
@@ -157,6 +201,23 @@ void MySTL::vector<T,Alloc>::push_back(const T& value) {
         AllocTraits::destroy(alloc,arr + sz);
         throw;
     }
+
+    sz++;
+}
+
+template<typename T,typename Alloc>
+void MySTL::vector<T, Alloc>::push_back(T&& value) {
+    if (sz == cp) reserve(2 * (sz + 1));
+
+    AllocTraits::construct(alloc, arr + sz, std::move(value));
+}
+
+template<typename T,typename Alloc>
+template<typename... Args>
+void MySTL::vector<T, Alloc>::emplace_back(Args&... args) {
+    if (sz == cp) reserve(2 * (sz + 1));
+
+    AllocTraits::construct(alloc, arr + sz, std::forward<Args>(args)...);
 
     sz++;
 }

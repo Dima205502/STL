@@ -1,5 +1,6 @@
 #pragma once
 #include<memory>
+#include<utility>
 #include<iterator>
 #include<stdexcept>
 #include<type_traits>
@@ -10,7 +11,7 @@ namespace MySTL{
   template<typename T,typename Alloc = std::allocator<T>>
   class vector {
 
-  private:
+    private:
     Alloc alloc;
 
     T* arr = nullptr;
@@ -19,140 +20,151 @@ namespace MySTL{
 
     using AllocTraits = std::allocator_traits<Alloc>;
 
-    template<bool isConst>
-    struct base_iterator {
+       template<bool isConst>
+       struct base_iterator {
        public:
-        using value_type = T;
-        using pointer = conditional_t<isConst, const T*, T*>;
-        using reference = conditional_t<isConst, const T&, T&>;
-        using iterator_category = std::random_access_iterator_tag;
+          using value_type = T;
+          using pointer = conditional_t<isConst, const T*, T*>;
+          using reference = conditional_t<isConst, const T&, T&>;
+          using iterator_category = std::random_access_iterator_tag;
+ 
+       private:
+          pointer ptr;
 
-      private:
-        pointer ptr;
+       public:
+          base_iterator(pointer ptr) : ptr(ptr) {}
+          base_iterator(const base_iterator&) = default;
+          base_iterator& operator=(const base_iterator&) = default;
 
-      public:
-        base_iterator(pointer ptr) : ptr(ptr) {}
-        base_iterator(const base_iterator&) = default;
-        base_iterator& operator=(const base_iterator&) = default;
+          reference operator*() const {
+             return *ptr;
+          }
 
-        reference operator*() const {
-            return *ptr;
-        }
+          pointer operator->() const {
+             return ptr;
+          }
 
-        pointer operator->() const {
-            return ptr;
-        }
+          base_iterator& operator++() {
+             ++ptr;
+             return *this;
+          }
 
-        base_iterator& operator++() {
-            ++ptr;
-            return *this;
-        }
+          base_iterator& operator++(int) {
+             base_iterator tmp = *this;
+             ++ptr;
+             return tmp;
+          }
 
-        base_iterator& operator++(int) {
-            base_iterator tmp = *this;
-            ++ptr;
-            return tmp;
-        }
+          base_iterator& operator--() {
+             --ptr;
+             return *this;
+          }
 
-        base_iterator& operator--() {
-            --ptr;
-            return *this;
-        }
+          base_iterator& operator--(int) {
+             base_iterator tmp = *this;
+             --ptr;
+             return tmp;
+          }
 
-        base_iterator& operator--(int) {
-            base_iterator tmp = *this;
-            --ptr;
-            return tmp;
-        }
+          base_iterator& operator+=(int n) {
+             ptr += n;
+             return *this;
+          }
 
-        base_iterator& operator+=(int n) {
-            ptr += n;
-            return *this;
-        }
+          base_iterator& operator-=(int n) {
+             ptr -= n;
+             return *this;
+          }
 
-        base_iterator& operator-=(int n) {
-            ptr -= n;
-            return *this;
-        }
-
-        bool operator==(const base_iterator& other) {
-            return ptr == other.ptr;
-        }
+          bool operator==(const base_iterator& other) {
+              return ptr == other.ptr;
+          }
     };
 
-public:
+   public:
 
-    using value_type = T;
-    using reference = T&;
-    using const_referense = const T&;
+      using value_type = T;
+      using reference = T&;
+      using const_referense = const T&;
 
-    using iterator = base_iterator<false>;
-    using const_iterator = base_iterator<true>;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-
-    //    Member functions
-
-    vector();
-    vector(size_t, const T&);
-    vector(const MySTL::vector<T>&);
-
-    ~vector();
+      using iterator = base_iterator<false>;
+      using const_iterator = base_iterator<true>;
+      using reverse_iterator = std::reverse_iterator<iterator>;
+      using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 
+      //    Member functions
 
-    //     Capacity 
+      vector();
+      vector(size_t, const T&);
 
-    bool empty() const;
-    size_t size() const;
-    size_t capacity() const;
+      vector(vector&&);
+      vector(const vector<T,Alloc>&);
 
-    void reserve(size_t);
+      vector& operator=(const vector<T, Alloc>&);
+      vector& operator=(vector&&);
 
-
-    //     Modifieres
-
-    void push_back(const T& value);
-    void pop_back();
-
-    void resize(size_t, const T&);
+      ~vector();
 
 
-    //    Element access
 
-    T& operator[](size_t);
-    const T& operator[](size_t) const;
+      //     Capacity 
 
-    T& at(size_t);
-    const T& at(size_t) const;
+      bool empty() const;
+      size_t size() const;
+      size_t capacity() const;
 
-    T& back();
-    T& front();
-
-    const T& back() const;
-    const T& front() const;
+      void reserve(size_t);
 
 
-    //       Iterators
+      //     Modifieres
 
-    iterator begin();
-    iterator end();
+      void push_back(const T&);
+      void push_back(T&&);
 
-    const_iterator begin() const;
-    const_iterator end() const;
+      template<typename... Args>
+      void emplace_back(Args&...);
 
-    const_iterator cbegin() const;
-    const_iterator cend() const;
+      void pop_back();
 
-    reverse_iterator rbegin();
-    reverse_iterator rend();
+      void resize(size_t, const T&);
 
-    const_reverse_iterator rbegin() const;
-    const_reverse_iterator rend() const;
 
-    const_reverse_iterator crbegin() const;
-    const_reverse_iterator crend() const;
+      //    Element access
+
+      T& operator[](size_t);
+      const T& operator[](size_t) const;
+
+      T& at(size_t);
+      const T& at(size_t) const;
+
+      T& back();
+      T& front();
+
+      const T& back() const;
+      const T& front() const;
+
+
+      //       Iterators
+
+      iterator begin();
+      iterator end();
+
+      const_iterator begin() const;
+      const_iterator end() const;
+
+      const_iterator cbegin() const;
+      const_iterator cend() const;
+
+      reverse_iterator rbegin();
+      reverse_iterator rend();
+
+      const_reverse_iterator rbegin() const;
+      const_reverse_iterator rend() const;
+
+      const_reverse_iterator crbegin() const;
+      const_reverse_iterator crend() const;
+
 };
 
 
